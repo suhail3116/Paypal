@@ -1,0 +1,32 @@
+# Dependencies
+node_modules/
+*/node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Python virtual environments & bytecode
+venv/
+*/venv/
+__pycache__/
+*/__pycache__/
+*.py[cod]
+*.sqlite3
+*.db
+
+# Build outputs
+dist/
+*/dist/
+build/
+
+# Secrets & Environment variables
+.env
+*/.env
+.env.local
+.env.*.local
+
+# Operating System & IDE files
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/

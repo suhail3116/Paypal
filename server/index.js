@@ -1,7 +1,7 @@
 import express from 'express';
 import cors from 'cors';
 import dotenv from 'dotenv';
-import { getDb, saveDb, logAudit, normalizePhone } from './db.js';
+import { getDb, saveDb, logAudit, normalizePhone, syncFromSupabase } from './db.js';
 import * as aiService from './aiService.js';
 import * as paypalService from './paypalService.js';
 
@@ -820,10 +820,11 @@ app.get('/api/audit-logs', (req, res) => {
 });
 
 // START SERVER
-app.listen(PORT, () => {
+app.listen(PORT, async () => {
   console.log(`====================================================`);
   console.log(` ShopPilot AI Omnichannel Server running on port ${PORT}`);
   console.log(` Mode: Multi-Tenant / PostgreSQL-Supabase Ready`);
   console.log(` Free Cloud AI & Local Ollama Engines Active`);
   console.log(`====================================================`);
+  await syncFromSupabase();
 });

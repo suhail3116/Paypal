@@ -1,10 +1,22 @@
 import fs from 'fs';
 import path from 'path';
 import { fileURLToPath } from 'url';
+import { createClient } from '@supabase/supabase-js';
+import dotenv from 'dotenv';
+
+dotenv.config();
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 const DATA_FILE = path.join(__dirname, 'shoppilot_data.json');
+
+// Supabase Cloud Client
+const SUPABASE_URL = process.env.SUPABASE_URL;
+const SUPABASE_KEY = process.env.SUPABASE_KEY;
+
+export const supabase = (SUPABASE_URL && SUPABASE_KEY)
+  ? createClient(SUPABASE_URL, SUPABASE_KEY)
+  : null;
 
 // Helper to normalize phone numbers to clean standard format
 export function normalizePhone(rawPhone) {
@@ -348,6 +360,36 @@ export function saveDb() {
     } catch (e) {
       console.error('Failed to save database to disk:', e);
     }
+  }
+}
+
+export async function syncFromSupabase() {
+  if (!supabase) return;
+  try {
+    const [shopRes, prodRes, custRes, catRes] = await Promise.all([
+      supabase.from('shops').select('*').limit(1),
+      supabase.from('products').select('*'),
+      supabase.from('customers').select('*'),
+      supabase.from('product_categories').select('*')
+    ]);
+
+    const currentDb = getDb();
+    if (shopRes.data && shopRes.data.length > 0) {
+      currentDb.shop = { ...currentDb.shop, ...shopRes.data[0] };
+    }
+    if (catRes.data && catRes.data.length > 0) {
+      currentDb.categories = catRes.data;
+    }
+    if (prodRes.data && prodRes.data.length > 0) {
+      currentDb.products = prodRes.data;
+    }
+    if (custRes.data && custRes.data.length > 0) {
+      currentDb.customers = custRes.data;
+    }
+    saveDb();
+    console.log(`[Supabase Cloud] Synchronized: ${prodRes.data?.length || 0} products, ${custRes.data?.length || 0} customers.`);
+  } catch (err) {
+    console.warn('[Supabase Cloud] Live sync deferred:', err.message);
   }
 }
 
